@@ -115,7 +115,7 @@ db-shell: ## Console psql sur la base de développement
 
 ## —— ✅ Tests ————————————————————————————————————————————————————————————————
 test: test-env test-db ## Lance les tests Hurl : make test · make test f=01 · make test ERRORS=long
-	$(HURL) $(HURL_FLAGS) $(if $(REPORT),--report-junit /reports/j1.xml) --glob '$(or $(f),)*.hurl'
+	$(HURL) $(HURL_FLAGS) $(if $(REPORT),--report-junit /reports/j1.xml) --glob '*$(if $(f),$(f)*,).hurl'
 
 report: ## Rapport JUnit dans reports/ (pour l'enseignant)
 	@mkdir -p reports && rm -f reports/*.xml
