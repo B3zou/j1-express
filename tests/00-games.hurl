@@ -135,6 +135,12 @@ HTTP 200
 [Asserts]
 jsonpath "$.teamSize" == 2
 
+# Un POST sans corps du tout (Swagger UI et les navigateurs ajoutent Content-Length: 0) :
+# ce n'est pas un 415, c'est un corps vide → 422
+POST {{host}}/api/games
+Content-Length: 0
+HTTP 422
+
 # Mauvais type de contenu → 415 Unsupported Media Type
 POST {{host}}/api/games
 Content-Type: text/plain
@@ -163,6 +169,14 @@ jsonpath "$.status" == 404
 
 # L'id doit être un nombre → 404 aussi
 GET {{host}}/api/games/abc
+HTTP 404
+
+# ... un entier « propre » (pas de 1.0, +1, 00001) ...
+GET {{host}}/api/games/1.0
+HTTP 404
+
+# ... et dans les bornes de PostgreSQL (integer : 2 147 483 647 maximum)
+GET {{host}}/api/games/2147483648
 HTTP 404
 
 # Une URL qui n'existe pas → 404 en JSON (middleware notFound)
