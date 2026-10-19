@@ -49,7 +49,7 @@ export class BaseRepository<T extends { id: number }> {
 
   /** INSERT à partir d'un objet déjà validé (clés connues) ; renvoie la ligne créée.
    *  Une clé absente ou undefined n'est pas insérée : la base applique sa valeur par défaut (ou NULL). */
-  async insert(data: Omit<T, 'id'>): Promise<T> {
+  async insert(data: Partial<Omit<T, 'id'>>): Promise<T> {
     const entries = definedEntries(data);
     const columns = entries.map(([key]) => toSnakeCase(key)).join(', ');
     const placeholders = entries.map((_, i) => `$${i + 1}`).join(', ');
