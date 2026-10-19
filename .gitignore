@@ -1,0 +1,24 @@
+# Rapports de tests (make report)
+/reports/*
+!/reports/.gitkeep
+
+# Surcharges locales (ports, nom de projet Compose)
+/.env
+
+# Notes de l'enseignant (jamais chez les étudiants)
+/TEACHER.md
+/teacher/
+
+# Node
+api/node_modules/
+api/dist/
+npm-debug.log*
+
+# Éditeurs et systèmes
+.idea/
+.vscode/
+.DS_Store
+__pycache__/
+
+# Espace de travail des agents
+/.superpowers/
