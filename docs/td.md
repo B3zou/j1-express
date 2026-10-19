@@ -6,7 +6,7 @@ Ce matin, on construit **deux ressources** sur le modèle de l'exemple fourni, `
 puis en écriture, puis `Player`, qui a une relation avec `Team`, une pagination et des filtres. À chaque étape,
 un fichier de test passe au vert.
 
-**Chaque étape commence par 5 à 10 minutes de réflexion, seul** (encadré « À vous ») : lisez le test, regardez
+**Chaque étape commence par un temps de réflexion, seul** (encadré « À vous ») : lisez le test, regardez
 l'exemple, essayez. Ensuite, on construit la solution ensemble au vidéoprojecteur (« Ensemble »). Si vous êtes en
 avance, continuez ; si vous êtes bloqué, attendez le moment « Ensemble », c'est prévu pour ça.
 
@@ -51,7 +51,7 @@ Un tableau, un 404 en JSON, un 422 avec la liste des problèmes : exactement la 
 Ouvrez `api/src/app.ts`. Six `app.use()`, dans un ordre précis, commentés. C'est **le** fichier du cours :
 l'ordre des `app.use()` est l'ordre d'exécution.
 
-### À vous (5 minutes)
+### À vous
 
 1. Dans `app.ts`, que se passe-t-il pour `GET /api/nothing` ? Quels middlewares s'exécutent, lequel répond ?
 2. Et pour `POST /api/games` avec un corps `{"name": ""}` ? Qui répond 422 : le routeur ou `errorHandler` ?
@@ -94,9 +94,10 @@ POST /api/games → 422 (8.7 ms)
 
 Pas de test Hurl pour cette étape : la preuve, c'est `make logs`.
 
-### À vous (10 minutes)
+### À vous
 
-Lisez `src/middlewares/requireJson.ts` (le même code qu'en cours) et l'antisèche Express, section
+Lisez `src/middlewares/requireJson.ts` (le code vu en cours, avec un détail de plus : un POST sans corps
+est accepté) et l'antisèche Express, section
 « Écrire un middleware ».
 
 1. Un middleware reçoit `(req, res, next)`. Quelles informations de `req` voulez-vous afficher ?
@@ -127,7 +128,7 @@ décide du 404.
 `GET /api/teams` (un tableau trié par nom, filtre `?country=FR`, `?country=fr` accepté) et
 `GET /api/teams/:id` (un élément, ou 404 en JSON). Lisez `tests/01-teams.hurl` jusqu'au premier `PATCH`.
 
-### À vous (10 minutes)
+### À vous
 
 1. Quelles colonnes la table `team` a-t-elle (`db/schema.sql`) ? Quel `interface Team` en découle ?
 2. Avec `BaseRepository<Team>`, que vous reste-t-il à écrire pour `GET /api/teams/:id` ? Et pour le filtre
@@ -171,7 +172,7 @@ différente.
 `name` 2 à 50 caractères, `tag` `/^[A-Z0-9]{2,5}$/`, `country` deux lettres majuscules, `name` et `tag` uniques
 (409). Lisez la suite de `tests/01-teams.hurl`.
 
-### À vous (10 minutes)
+### À vous
 
 1. Écrivez `TeamSchema` (zod) d'après les règles. Comment obtenir le schéma du PATCH sans le réécrire ?
 2. Le test attend `409` quand le nom existe déjà. Qui détecte le doublon : zod, le repository, PostgreSQL ?
@@ -209,7 +210,7 @@ Lisez `tests/02-players.hurl`. En entrée, `teamId` (ou `null`) ; en sortie, `te
 `null`), jamais `birthDate`. Côté équipe, `GET /api/teams/:id` renvoie `players: [{ id, nickname, role,
 rating }]` triés par pseudo. `rating` vaut 1000 par défaut, `teamId` inconnu → 422 sur `teamId`.
 
-### À vous (10 minutes)
+### À vous
 
 1. Deux formes pour un joueur : la **ligne** de la table (`team_id`, `birth_date`…) et la **vue** renvoyée par
    l'API (`team: {…}`, pas de `birthDate`). Écrivez les deux `interface`.
@@ -255,7 +256,7 @@ texte SQL, et comment paginer.
 `X-Total-Count`, 400 si un paramètre est invalide, `q` cherche dans le pseudo sans tenir compte de la casse.
 Lisez `tests/03-players-search.hurl` à partir du premier `GET`.
 
-### À vous (10 minutes)
+### À vous
 
 1. Les paramètres de requête sont des **chaînes** (`"2"`, pas `2`). Comment zod les convertit-il ? Quelles
    valeurs par défaut pour `page` et `limit` ?

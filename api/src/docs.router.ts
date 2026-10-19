@@ -18,19 +18,32 @@ function loadSpec(): Record<string, unknown> {
   return spec;
 }
 
-loadSpec(); // au démarrage : un YAML cassé arrête l'API tout de suite, avec le message d'erreur
+/** Un YAML cassé ne doit pas arrêter l'API : on répond 500 avec le message du parseur. */
+function loadSpecOr500(res: Response): Record<string, unknown> | null {
+  try {
+    return loadSpec();
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err);
+    console.error(`openapi.yaml invalide : ${detail}`);
+    res.status(500).json({ title: 'openapi.yaml invalide', status: 500, detail });
+    return null;
+  }
+}
 
 export const docsRouter = Router();
 
 docsRouter.get('/openapi.json', (_req, res) => {
-  res.json(loadSpec());
+  const spec = loadSpecOr500(res);
+  if (spec) res.json(spec);
 });
 
 docsRouter.use(
   '/docs',
   swaggerUi.serve,
-  (req: Request & { swaggerDoc?: unknown }, _res: Response, next: NextFunction) => {
-    req.swaggerDoc = loadSpec(); // swagger-ui-express lit le document sur req.swaggerDoc
+  (req: Request & { swaggerDoc?: unknown }, res: Response, next: NextFunction) => {
+    const spec = loadSpecOr500(res);
+    if (!spec) return;
+    req.swaggerDoc = spec; // swagger-ui-express lit le document sur req.swaggerDoc
     next();
   },
   swaggerUi.setup(undefined, { customSiteTitle: 'GG League API' }),

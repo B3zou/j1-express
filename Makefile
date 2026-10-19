@@ -62,7 +62,7 @@ doctor: ## Vérifie votre poste (Docker, ports, git, fins de ligne)
 	 if grep -q $$'\r' Makefile api/docker-entrypoint.sh 2>/dev/null; then ko "Fins de ligne Windows (CRLF) détectées : git config --global core.autocrlf input, puis reclonez"; else ok "Fins de ligne Unix (LF)"; fi; \
 	 echo; [ $$FAIL -eq 0 ] && printf "$(GREEN)Tout est prêt.$(RESET) Lancez : make install\n" || { printf "$(RED)Corrigez les points en rouge avant de continuer.$(RESET)\n"; exit 1; }
 
-install: ## Première installation (construit l'image et installe les dépendances : 1 à 3 min)
+install: ## Première installation (construit l'image et installe les dépendances)
 	@mkdir -p reports
 	@if [ -n "$(API_IMAGE)" ]; then $(COMPOSE) pull api; else $(COMPOSE) build; fi
 	$(COMPOSE) up -d --wait
@@ -125,8 +125,12 @@ report: ## Rapport JUnit dans reports/ (pour l'enseignant)
 # 1. La base de test est (re)créée vide par un conteneur éphémère, AVANT de démarrer api-test
 #    (son healthcheck interroge la base : sans elle, il ne serait jamais « healthy »).
 test-db:
+	@$(COMPOSE) up -d --wait database >/dev/null 2>&1
 	@$(COMPOSE) --profile test run --rm --no-deps -T api-test npm run --silent db:reset -- --no-seed >/dev/null
 
 # 2. api-test ne recharge pas le code tout seul (pas de « watch ») : on le recrée à chaque fois.
-test-env:
-	@$(COMPOSE) --profile test up -d --wait --force-recreate api-test >/dev/null 2>&1
+#    S'il ne démarre pas (erreur de syntaxe, import cassé...), on montre ses journaux.
+test-env: test-db
+	@$(COMPOSE) --profile test up -d --wait --force-recreate api-test >/dev/null 2>&1 || { \
+	  printf "$(RED)L'API de test ne démarre pas. Ses derniers journaux :$(RESET)\n"; \
+	  $(COMPOSE) --profile test logs --no-log-prefix --tail=25 api-test; exit 1; }

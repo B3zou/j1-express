@@ -15,7 +15,7 @@ métier, et vous documentez le tout dans `openapi.yaml`.
 
 ## Comment travailler
 
-**Chaque étape du TD commence par 5 à 10 minutes de réflexion, seul** : lisez le test, répondez aux questions de
+**Chaque étape du TD commence par un temps de réflexion, seul** : lisez le test, répondez aux questions de
 l'encadré « À vous », essayez. Ensuite, on construit la solution ensemble au vidéoprojecteur. Si vous êtes en
 avance, passez à l'étape suivante ; si vous êtes bloqué, c'est normal, c'est pour ça qu'on la fait ensemble.
 

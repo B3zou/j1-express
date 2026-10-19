@@ -87,7 +87,10 @@ import type { Request, Response, NextFunction } from 'express';
 
 export function requireJson(req: Request, res: Response, next: NextFunction) {
   const writes = ['POST', 'PUT', 'PATCH'];
-  if (writes.includes(req.method) && !req.is('application/json')) {
+  // Un POST « action » (POST /api/matches/3/play) n'a pas de corps : rien à vérifier.
+  // Swagger UI et les navigateurs envoient alors Content-Length: 0 → on regarde la taille annoncée.
+  const hasBody = req.headers['transfer-encoding'] !== undefined || Number(req.headers['content-length'] ?? 0) > 0;
+  if (writes.includes(req.method) && hasBody && !req.is('application/json')) {
     res.status(415).json({ title: 'Unsupported Media Type', status: 415 });
     return; // on répond : on n'appelle pas next()
   }

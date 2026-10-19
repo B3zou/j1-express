@@ -150,7 +150,7 @@ Puis dans une opération : `'404': { $ref: '#/components/responses/NotFound' }`.
 
 | Symptôme | Cause et correction |
 |---|---|
-| l'API ne démarre plus (`YAMLParseError`, ou « le document doit commencer par openapi: 3.1.0 ») | indentation : 2 espaces, jamais de tabulation ; une valeur qui contient `:` ou `#` va entre quotes |
+| `/api/openapi.json` et Swagger UI répondent 500 `openapi.yaml invalide` (le message du parseur est dans `detail`) | indentation : 2 espaces, jamais de tabulation ; une valeur qui contient `:` ou `#` va entre quotes |
 | un code de statut est ignoré ou refusé | les codes s'écrivent entre quotes : `'200'`, `'404'` (sinon YAML lit un nombre) |
 | le test `06-openapi` échoue sur une réponse 404, 409 ou 422 | documentez aussi les erreurs : `404` sur `/{id}`, `409` et `422` sur les écritures, `400` sur les filtres |
 | `required: true` sous une propriété | `required` est une **liste au niveau de l'objet** ; `required: true` n'existe que pour un paramètre ou un `requestBody` |
