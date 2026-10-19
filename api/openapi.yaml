@@ -1,0 +1,188 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# GG League API — spécification OpenAPI 3.1, écrite à la main (conception d'abord).
+# Servie sur /api/openapi.json et affichée par Swagger UI sur /api/docs.
+# Game est décrit en entier : c'est le modèle pour Team, Player et Match (TP, partie 3).
+# ─────────────────────────────────────────────────────────────────────────────
+openapi: 3.1.0
+info:
+  title: GG League API
+  version: 1.0.0
+  description: L'API REST de la GG League, une ligue e-sport fictive. Jeux, équipes, joueurs, matchs.
+servers:
+  - url: http://localhost:8000
+tags:
+  - name: Games
+    description: Les jeux de la ligue (exemple fourni)
+
+paths:
+  /api/games:
+    get:
+      tags: [Games]
+      summary: Liste des jeux
+      parameters:
+        - name: genre
+          in: query
+          description: Ne garder que les jeux de ce genre
+          schema: { $ref: '#/components/schemas/Genre' }
+      responses:
+        '200':
+          description: Les jeux, triés par nom
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Game' }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags: [Games]
+      summary: Créer un jeu
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/GameInput' }
+      responses:
+        '201':
+          description: Jeu créé
+          headers:
+            Location:
+              description: L'URL du nouveau jeu
+              schema: { type: string, example: /api/games/6 }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Game' }
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /api/games/{id}:
+    parameters:
+      - $ref: '#/components/parameters/id'
+    get:
+      tags: [Games]
+      summary: Un jeu
+      responses:
+        '200':
+          description: Le jeu demandé
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Game' }
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags: [Games]
+      summary: Modifier un jeu (seuls les champs envoyés changent)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/GamePatch' }
+      responses:
+        '200':
+          description: Le jeu modifié
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Game' }
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    delete:
+      tags: [Games]
+      summary: Supprimer un jeu
+      responses:
+        '204':
+          description: Jeu supprimé
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  parameters:
+    id:
+      name: id
+      in: path
+      required: true
+      description: L'identifiant de la ressource
+      schema: { type: integer, minimum: 1 }
+
+  schemas:
+    Genre:
+      type: string
+      enum: [moba, fps, fighting, sports, racing, strategy]
+
+    # Ce que l'API renvoie
+    Game:
+      type: object
+      required: [id, name, genre, teamSize]
+      properties:
+        id: { type: integer, readOnly: true, example: 1 }
+        name: { type: string, minLength: 1, maxLength: 100, example: Rocket League }
+        genre: { $ref: '#/components/schemas/Genre' }
+        teamSize: { type: integer, minimum: 1, maximum: 10, example: 3 }
+
+    # Ce que le client envoie (POST) : les mêmes propriétés, sans id
+    GameInput:
+      type: object
+      required: [name, genre, teamSize]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 100, example: Rocket League }
+        genre: { $ref: '#/components/schemas/Genre' }
+        teamSize: { type: integer, minimum: 1, maximum: 10, example: 3 }
+
+    # PATCH : tout est facultatif
+    GamePatch:
+      type: object
+      properties:
+        name: { type: string, minLength: 1, maxLength: 100 }
+        genre: { $ref: '#/components/schemas/Genre' }
+        teamSize: { type: integer, minimum: 1, maximum: 10 }
+
+    # Le format de toutes les erreurs (inspiré de la RFC 9457, « problem details »)
+    Error:
+      type: object
+      required: [title, status]
+      properties:
+        title: { type: string, example: Validation Failed }
+        status: { type: integer, example: 422 }
+        errors:
+          type: array
+          description: Présent pour les erreurs 400, 409 et 422, un élément par champ en cause
+          items:
+            type: object
+            required: [path, message]
+            properties:
+              path: { type: string, example: teamSize }
+              message: { type: string, example: 'Too big: expected number to be <=10' }
+
+  responses:
+    BadRequest:
+      description: Requête illisible (JSON cassé) ou paramètre de requête invalide
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    NotFound:
+      description: La ressource n'existe pas
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Conflict:
+      description: Une valeur unique est déjà prise (nom, tag, pseudo…)
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    UnsupportedMediaType:
+      description: Le corps n'est pas annoncé comme application/json
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    ValidationError:
+      description: Le corps est lisible mais ne respecte pas les règles
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
