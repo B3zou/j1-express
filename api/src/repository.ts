@@ -8,6 +8,11 @@ export function toSnakeCase(key: string): string {
   return key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
 }
 
+/** Les paires [clé, valeur] dont la valeur n'est pas undefined (une clé absente n'est pas une colonne à écrire). */
+function definedEntries(data: object): [string, unknown][] {
+  return Object.entries(data).filter(([, value]) => value !== undefined);
+}
+
 export class BaseRepository<T extends { id: number }> {
   /**
    * @param table    le nom de la table (jamais une valeur venue du client)
@@ -42,26 +47,28 @@ export class BaseRepository<T extends { id: number }> {
     return row ?? null;
   }
 
-  /** INSERT à partir d'un objet déjà validé (clés connues) ; renvoie la ligne créée. */
+  /** INSERT à partir d'un objet déjà validé (clés connues) ; renvoie la ligne créée.
+   *  Une clé absente ou undefined n'est pas insérée : la base applique sa valeur par défaut (ou NULL). */
   async insert(data: Omit<T, 'id'>): Promise<T> {
-    const keys = Object.keys(data);
-    const columns = keys.map(toSnakeCase).join(', ');
-    const placeholders = keys.map((_, i) => `$${i + 1}`).join(', ');
+    const entries = definedEntries(data);
+    const columns = entries.map(([key]) => toSnakeCase(key)).join(', ');
+    const placeholders = entries.map((_, i) => `$${i + 1}`).join(', ');
     const [row] = await query<T>(
       `INSERT INTO ${this.table} (${columns}) VALUES (${placeholders}) RETURNING ${this.columns.join(', ')}`,
-      Object.values(data),
+      entries.map(([, value]) => value),
     );
     return row as T;
   }
 
-  /** UPDATE partiel (PATCH) : seules les clés présentes changent. Renvoie null si l'id n'existe pas. */
+  /** UPDATE partiel (PATCH) : seules les clés présentes changent (null est une valeur : « vider le champ »).
+   *  Renvoie null si l'id n'existe pas. */
   async update(id: number, data: Partial<Omit<T, 'id'>>): Promise<T | null> {
-    const keys = Object.keys(data);
-    if (keys.length === 0) return this.findOne(id); // rien à changer : pas une erreur
-    const assignments = keys.map((key, i) => `${toSnakeCase(key)} = $${i + 2}`).join(', ');
+    const entries = definedEntries(data);
+    if (entries.length === 0) return this.findOne(id); // rien à changer : pas une erreur
+    const assignments = entries.map(([key], i) => `${toSnakeCase(key)} = $${i + 2}`).join(', ');
     const [row] = await query<T>(
       `UPDATE ${this.table} SET ${assignments} WHERE id = $1 RETURNING ${this.columns.join(', ')}`,
-      [id, ...Object.values(data)],
+      [id, ...entries.map(([, value]) => value)],
     );
     return row ?? null;
   }
