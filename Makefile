@@ -114,7 +114,7 @@ db-shell: ## Console psql sur la base de développement
 	$(COMPOSE) exec database psql -U app app
 
 ## —— ✅ Tests ————————————————————————————————————————————————————————————————
-test: test-env test-db ## Lance les tests Hurl : make test · make test f=01 · make test ERRORS=long
+test: test-db test-env ## Lance les tests Hurl : make test · make test f=01 · make test ERRORS=long
 	$(HURL) $(HURL_FLAGS) $(if $(REPORT),--report-junit /reports/j1.xml) --glob '*$(if $(f),$(f)*,).hurl'
 
 report: ## Rapport JUnit dans reports/ (pour l'enseignant)
@@ -122,9 +122,11 @@ report: ## Rapport JUnit dans reports/ (pour l'enseignant)
 	-@$(MAKE) --no-print-directory test REPORT=1
 	@printf "\nRapport écrit dans reports/j1.xml\n"
 
-# api-test ne recharge pas le code tout seul (pas de « watch ») : on le recrée à chaque fois
+# 1. La base de test est (re)créée vide par un conteneur éphémère, AVANT de démarrer api-test
+#    (son healthcheck interroge la base : sans elle, il ne serait jamais « healthy »).
+test-db:
+	@$(COMPOSE) --profile test run --rm --no-deps -T api-test npm run --silent db:reset -- --no-seed >/dev/null
+
+# 2. api-test ne recharge pas le code tout seul (pas de « watch ») : on le recrée à chaque fois.
 test-env:
 	@$(COMPOSE) --profile test up -d --wait --force-recreate api-test >/dev/null 2>&1
-
-test-db:
-	@$(EXEC_TEST) npm run --silent db:reset -- --no-seed >/dev/null
