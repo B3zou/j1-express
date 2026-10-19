@@ -122,8 +122,9 @@ report: ## Rapport JUnit dans reports/ (pour l'enseignant)
 	-@$(MAKE) --no-print-directory test REPORT=1
 	@printf "\nRapport écrit dans reports/j1.xml\n"
 
+# api-test ne recharge pas le code tout seul (pas de « watch ») : on le recrée à chaque fois
 test-env:
-	@$(COMPOSE) --profile test up -d --wait api-test >/dev/null
+	@$(COMPOSE) --profile test up -d --wait --force-recreate api-test >/dev/null 2>&1
 
 test-db:
 	@$(EXEC_TEST) npm run --silent db:reset -- --no-seed >/dev/null
