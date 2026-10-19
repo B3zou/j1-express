@@ -100,6 +100,18 @@ Content-Type: application/json
 { "teamAId": "un", "teamBId": {{mtb_id}} }
 HTTP 422
 
+# Un id hors des bornes de PostgreSQL (integer) : 422, pas 500
+POST {{host}}/api/matches
+Content-Type: application/json
+{ "teamAId": 99999999999, "teamBId": {{mtb_id}} }
+HTTP 422
+
+# Jouer un match se fait sans corps : Swagger UI et les navigateurs envoient alors Content-Length: 0,
+# ce n'est pas un 415 (match inexistant ici → 404)
+POST {{host}}/api/matches/999999/play
+Content-Length: 0
+HTTP 404
+
 # Deux autres matchs : une revanche, et un match contre une équipe sans joueur
 POST {{host}}/api/matches
 Content-Type: application/json

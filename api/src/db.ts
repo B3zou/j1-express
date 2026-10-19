@@ -49,6 +49,8 @@ export function translatePgError(err: unknown): HttpError | null {
       return new HttpError(422, 'Validation Failed', [{ path: fieldOf(pg), message: 'does not exist' }]);
     case '23514':
       return new HttpError(422, 'Validation Failed', [{ path: fieldOf(pg), message: 'invalid value' }]);
+    case '22003': // numeric_value_out_of_range : un id au-delà de 2 147 483 647 (integer)
+      return new HttpError(422, 'Validation Failed', [{ path: fieldOf(pg), message: 'value out of range' }]);
     default:
       return null;
   }
