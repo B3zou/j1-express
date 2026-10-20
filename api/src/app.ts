@@ -3,15 +3,19 @@
 import express from 'express';
 import { docsRouter } from './docs.router.js';
 import { gameRouter } from './games/game.router.js';
+import { teamRouter } from './teams/team.router.js';
 import { healthRouter } from './health.router.js';
+import { requestLogger } from './middlewares/requestLogger.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 import { notFound } from './middlewares/notFound.js';
 import { requireJson } from './middlewares/requireJson.js';
 
 const app = express();
 
+app.use(requestLogger);
 // 1. Lire les corps JSON dans req.body (sinon req.body vaut undefined). JSON illisible → erreur 400.
 app.use(express.json());
+
 // 2. Une écriture sans Content-Type: application/json → 415, avant même d'atteindre une route.
 app.use(requireJson);
 
@@ -19,10 +23,11 @@ app.use(requireJson);
 app.use('/api/health', healthRouter);
 app.use('/api', docsRouter); // /api/docs (Swagger UI) et /api/openapi.json
 app.use('/api/games', gameRouter);
+app.use('/api/teams', teamRouter);
 
 // 4. Aucune route n'a répondu → 404 en JSON.
 app.use(notFound);
-// 5. Toujours en dernier, 4 paramètres : transforme toute erreur en réponse JSON.
+// 5. Toujours en dernier, QUATRE paramètres : transforme toute erreur en réponse JSON.
 app.use(errorHandler);
 
 export default app;
