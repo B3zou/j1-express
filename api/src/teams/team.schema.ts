@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { PlayerSummary } from '../players/player.schema.js';
 
 export interface Team {
   id: number;
@@ -6,6 +7,11 @@ export interface Team {
   tag: string;
   country: string;
 }
+
+export interface TeamWithPlayers extends Team {
+  players: PlayerSummary[];
+}
+
 
 // Ce que le client a le droit d'envoyer, vérifié à l'exécution (les types TypeScript n'existent plus).
 export const TeamSchema = z.object({
